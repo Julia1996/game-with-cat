@@ -4,12 +4,13 @@ class Game {
   constructor(config) {
     const createRoundsFrequency = config.createRoundsFrequency || 800;
     const roundsSpeed = config.roundsSpeed || 1;
+    this._rounds = [];
     this._createCat();
     this._score = document.querySelector('.rez');
     this._score.textContent = '0';
     document.body.appendChild(this._cat);
-    this._createRoundTimerId = setInterval(this._createRound, createRoundsFrequency);
-    this._moveAndDeleteRoundsTimerId = setInterval(this._moveAndDeleteRounds, roundsSpeed);
+    this._createRoundTimerId = setInterval(() => this._createRound(), createRoundsFrequency);
+    this._moveAndDeleteRoundsTimerId = setInterval(() => this._moveAndDeleteRounds(), roundsSpeed);
     this._changeScoreTimerId = setInterval(() => this._changeScore(), 100);
     this._onMoseMove = (event) => this._moveCat(event);
     document.body.addEventListener('mousemove', this._onMoseMove);
@@ -29,13 +30,13 @@ class Game {
   }
 
   _createRound() {
-    var newRound = document.createElement('div');
+    const newRound = document.createElement('div');
     newRound.classList.add('round');
     newRound.style.left = Math.floor(Math.random() * 100) + '%';
-    var widthHeight = 50 + Math.floor(Math.random() * 50);
+    const widthHeight = 50 + Math.floor(Math.random() * 50);
     newRound.style.width = widthHeight + 'px';
     newRound.style.height = widthHeight + 'px';
-    var color = Math.floor(Math.random() * 11);
+    const color = Math.floor(Math.random() * 11);
     if (color > 0 && color <= 2) {
       newRound.style.background = randomColors[0];
     }
@@ -56,14 +57,16 @@ class Game {
     }
 
     document.body.appendChild(newRound);
+    this._rounds.push(newRound);
   }
 
   // передвигает круги и удаляет их, если они ниже окна
   _moveAndDeleteRounds() {
-    Array.from(document.getElementsByClassName('round')).forEach((round) => {
+    this._rounds.forEach((round) => {
       round.style.top = 1 + round.getBoundingClientRect().top + 'px';
       if (round.getBoundingClientRect().top > window.innerHeight) {
         document.body.removeChild(round);
+        this._rounds.splice(this._rounds.indexOf(round), 1);
       }
     });
   }
@@ -97,7 +100,8 @@ class Game {
   }
 
   _removeRounds() {
-    document.querySelectorAll('.round').forEach((round) => document.body.removeChild(round));
+    this._rounds.forEach((round) => document.body.removeChild(round));
+    this._rounds = [];
   }
 
   getScore() {
@@ -142,7 +146,7 @@ function showResults(currentResult) {
   resultModal.hidden = false;
   resultWrapper.textContent = currentResult;
   const bestResult = localStorage.getItem('best-result');
-  if (bestResult < currentResult) {
+  if (+bestResult < +currentResult) {
     localStorage.setItem('best-result', currentResult);
     bestResultWrapper.textContent = currentResult;
   } else if (bestResult > currentResult) {
